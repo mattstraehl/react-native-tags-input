@@ -25,6 +25,7 @@
   },
   "homepage": "https://github.com/jimmybengtsson/react-native-tags-input#readme",
   "dependencies": {
+    "@ubaids/react-native-material-textfield": "^0.16.3",
     "prop-types": "^15.7.2"
   }
 }

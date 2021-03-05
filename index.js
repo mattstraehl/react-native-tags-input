@@ -10,35 +10,9 @@ import {
   ViewPropTypes
 } from 'react-native';
 
+import { TextField } from '@ubaids/react-native-material-textfield'
+
 class Tags extends React.Component {
-
-  focus() {
-    this.input.focus();
-  }
-
-  blur() {
-    this.input.blur();
-  }
-
-  clear() {
-    this.input.clear();
-  }
-
-  isFocused() {
-    return this.input.isFocused();
-  }
-
-  setNativeProps(nativeProps) {
-    this.input.setNativeProps(nativeProps);
-  }
-
-  renderLabel = (text, style) => {
-    return (
-      <Text style={style}>
-      {text}
-      </Text>
-  )
-  };
 
   renderLeftElement = (element, style) => {
     return (
@@ -65,12 +39,11 @@ class Tags extends React.Component {
         tagsArray: [...new Set(tempArray)] // Deduplication
       };
       updateState(tempObject);
-      return this.input.clear();
+      return this.props.input.current.setValue('');
     }
   }
 
   onChangeText = (text, tags, updateState, keysForTags, keysForTagsArray) => {
-
     if (keysForTagsArray) {
       return this.onChangeText2(text, tags, updateState, keysForTagsArray)
     }
@@ -93,7 +66,7 @@ class Tags extends React.Component {
         tagsArray: [...new Set(tempArray)] // Deduplication
       };
       updateState(tempObject);
-      return this.input.clear();
+      return this.props.input.current.setValue('');
     }
     let tempObject = {
       tag: text,
@@ -117,7 +90,7 @@ class Tags extends React.Component {
           tagsArray: tags.tagsArray,
         };
         updateState(tempObject);
-        return this.input.clear();
+        return this.props.input.current.setValue('');
       }
       const tempTag = text.replace(regexp, '');
       const tempArray = tags.tagsArray.concat(tempTag);
@@ -126,7 +99,7 @@ class Tags extends React.Component {
         tagsArray: [...new Set(tempArray)] // Deduplication
       };
       updateState(tempObject);
-      return this.input.clear();
+      return this.props.input.current.setValue('');
     }
     let tempObject = {
       tag: text,
@@ -150,16 +123,7 @@ class Tags extends React.Component {
   render() {
     const {
       containerStyle,
-      disabled,
-      disabledInputStyle,
-      inputContainerStyle,
-      leftElement,
-      leftElementContainerStyle,
-      rightElement,
-      rightElementContainerStyle,
-      inputStyle,
-      label,
-      labelStyle,
+      input,
       tags,
       tagStyle,
       tagTextStyle,
@@ -169,61 +133,44 @@ class Tags extends React.Component {
       keysForTagsArray,
       deleteElement,
       deleteIconStyles,
-      customElement,
     } = this.props;
 
-    const props = this.props;
     return (
       <View style={StyleSheet.flatten([styles.container, containerStyle])}>
-      {label ? this.renderLabel(label, StyleSheet.flatten([styles.labelStyle, labelStyle])) : null}
-        <View style={StyleSheet.flatten(StyleSheet.flatten([styles.inputContainer, inputContainerStyle]))}>
-          {leftElement ? this.renderLeftElement(leftElement, leftElementContainerStyle) : null}
-          <TextInput
-            underlineColorAndroid="transparent"
-            editable={!disabled}
-            ref={ref => {
-              this.input = ref;
-            }}
-            style={StyleSheet.flatten([
-                styles.input,
-                inputStyle,
-                disabled && styles.disabledInput,
-                disabled && disabledInputStyle,
-              ])}
-            {...props}
-            value={tags.tag}
-            onChangeText={text => this.onChangeText(text, tags, updateState, keysForTag, keysForTagsArray)}
-            onEndEditing={() => this.onEndEditing(tags, updateState)}
+        <TextField
+          ref={input}
+          value={tags.tag}
+          onChangeText={text => this.onChangeText(text, tags, updateState, keysForTag, keysForTagsArray)}
+          onEndEditing={() => this.onEndEditing(tags, updateState)}
+          {...this.props}
         />
-        {rightElement ? this.renderRightElement(rightElement, rightElementContainerStyle) : null}
-      </View>
-        {customElement ? customElement : null}
-      <View style={StyleSheet.flatten([styles.tagsView, tagsViewStyle])}>
-        {tags.tagsArray.map((item, count) => {
+        <View style={StyleSheet.flatten([styles.tagsView, tagsViewStyle])}>
+          {tags.tagsArray.map((item, count) => {
             return (
               <View
                 style={StyleSheet.flatten([styles.tag, tagStyle])}
                 key={count}
               >
               <Text style={StyleSheet.flatten([styles.tagText, tagTextStyle])}>{item}</Text>
-              <TouchableOpacity onPressIn={() => this.deleteTag(count, tags, updateState) }>
+                <TouchableOpacity onPressIn={() => this.deleteTag(count, tags, updateState) }>
                   {deleteElement ? deleteElement : (
                     <Image
                       source={require('./assets/close.png')}
                       style={StyleSheet.flatten([styles.deleteIcon, deleteIconStyles])}
                     />
                   )}
-            </TouchableOpacity>
-            </View>
-          )
+                </TouchableOpacity>
+              </View>
+            )
           })}
         </View>
       </View>
-  );
+    );
   }
 }
 
 Tags.propTypes = {
+  input: PropTypes.shape({ current: PropTypes.any }),
   disabled: PropTypes.bool,
   leftElement: PropTypes.element,
   rightElement: PropTypes.element,
@@ -246,7 +193,6 @@ Tags.propTypes = {
 const styles = {
   container: {
     width: '100%',
-    paddingHorizontal: 10,
   },
   disabledInput: {
     opacity: 0.5,
