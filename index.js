@@ -19,7 +19,7 @@ class Tags extends React.Component {
       <View style={StyleSheet.flatten([styles.leftElement, style])}>
       {element}
       </View>
-  )
+    )
   };
 
   renderRightElement = (element, style) => {
@@ -27,13 +27,14 @@ class Tags extends React.Component {
       <View style={StyleSheet.flatten([styles.rightElement, style])}>
       {element}
       </View>
-  )
+    )
   };
 
   // If characters remain in the input field after input is completed, add them to the tag.
   onEndEditing = (tags, updateState) => {
     if (tags.tag) {
-      const tempArray = tags.tagsArray.concat(tags.tag);
+      const newTags = tags.tag.toLowerCase().match(/\S+/g);
+      const tempArray = tags.tagsArray.concat(newTags);
       const tempObject = {
         tag: '',
         tagsArray: [...new Set(tempArray)] // Deduplication
@@ -43,65 +44,22 @@ class Tags extends React.Component {
     }
   }
 
-  onChangeText = (text, tags, updateState, keysForTags, keysForTagsArray) => {
-    if (keysForTagsArray) {
-      return this.onChangeText2(text, tags, updateState, keysForTagsArray)
-    }
-
-    let keysStr;
-    if (typeof keysForTags === 'string') {
-      keysStr = keysForTags;
-    } else {
-      keysStr = ' ';
-    }
-
-    if (text.includes(keysStr)) {
-      if (text === keysStr) {
+  onChangeText = (text, tags, updateState) => {
+    const keysStr = ' ';
+    if (text.endsWith(keysStr)) {
+      if (!text.trim()) {
         return
       }
-      let tempTag = text.replace(keysStr, '');
-      const tempArray = tags.tagsArray.concat(tempTag);
-      let tempObject = {
+      const newTags = text.toLowerCase().match(/\S+/g);
+      const tempArray = tags.tagsArray.concat(newTags);
+      const tempObject = {
         tag: '',
         tagsArray: [...new Set(tempArray)] // Deduplication
       };
       updateState(tempObject);
       return this.props.input.current.setValue('');
     }
-    let tempObject = {
-      tag: text,
-      tagsArray: tags.tagsArray
-    };
-    return updateState(tempObject)
-  };
-
-  onChangeText2 = (text, tags, updateState, keysForTagsArray) => {
-
-    // Escaping special characters.
-    const keys = keysForTagsArray.map((str) => (str+'').replace(/([\\\.\+\*\?\[\^\]\$\(\)\{\}\=\!\<\>\|\:])/g, "\\$1"));
-
-    const regexp = new RegExp(keys.join('|'));
-
-    if (regexp.test(text)) {
-      if (keysForTagsArray.includes(text)) {
-        // The following processing is required because multiple characters may be specified as one delimiter.
-        let tempObject = {
-          tag: '',
-          tagsArray: tags.tagsArray,
-        };
-        updateState(tempObject);
-        return this.props.input.current.setValue('');
-      }
-      const tempTag = text.replace(regexp, '');
-      const tempArray = tags.tagsArray.concat(tempTag);
-      let tempObject = {
-        tag: '',
-        tagsArray: [...new Set(tempArray)] // Deduplication
-      };
-      updateState(tempObject);
-      return this.props.input.current.setValue('');
-    }
-    let tempObject = {
+    const tempObject = {
       tag: text,
       tagsArray: tags.tagsArray
     };
@@ -109,11 +67,10 @@ class Tags extends React.Component {
   };
 
   deleteTag = (tagToDelete, tags, updateState) => {
-
-    let tempArray = tags.tagsArray;
+    const tempArray = tags.tagsArray;
     tempArray.splice(tagToDelete, 1);
 
-    let tempObject = {
+    const tempObject = {
       tag: tags.tag,
       tagsArray: tempArray
     };
@@ -129,8 +86,6 @@ class Tags extends React.Component {
       tagTextStyle,
       tagsViewStyle,
       updateState,
-      keysForTag,
-      keysForTagsArray,
       deleteElement,
       deleteIconStyles,
     } = this.props;
@@ -140,8 +95,9 @@ class Tags extends React.Component {
         <TextField
           ref={input}
           value={tags.tag}
-          onChangeText={text => this.onChangeText(text, tags, updateState, keysForTag, keysForTagsArray)}
+          onChangeText={text => this.onChangeText(text, tags, updateState)}
           onEndEditing={() => this.onEndEditing(tags, updateState)}
+          autoCapitalize='none'
           {...this.props}
         />
         <View style={StyleSheet.flatten([styles.tagsView, tagsViewStyle])}>
@@ -178,8 +134,6 @@ Tags.propTypes = {
   label: PropTypes.string,
   tags: PropTypes.object,
   updateState: PropTypes.func,
-  keysForTag: PropTypes.string,
-  keysForTagsArray: PropTypes.arrayOf(PropTypes.string),
   containerStyle: ViewPropTypes.style,
   inputContainerStyle: ViewPropTypes.style,
   inputStyle: TextInput.propTypes.style,
